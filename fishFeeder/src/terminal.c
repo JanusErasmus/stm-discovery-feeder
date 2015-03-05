@@ -19,11 +19,10 @@
 
 void handleTerm();
 
-bool t_InputFlag = 0;
-bool t_jumpFlag = 0;
-
 char t_buff[TERM_BUFF_LEN];
 uint8_t t_buffLen = 0;
+
+bool t_InputFlag;
 
 USART_TypeDef* termUART = 0;
 
@@ -131,16 +130,6 @@ bool t_hadInput()
 }
 
 
-bool t_jumpNow()
-{
-	return t_jumpFlag;
-}
-
-void t_setJumpFlag()
-{
-	t_jumpFlag = 1;
-}
-
 
 void handleTerm()
 {
@@ -176,10 +165,6 @@ void t_putc(char c)
 	USART_SendData(termUART, c);
 	while(!USART_GetFlagStatus(termUART, USART_FLAG_TXE));
 }
-
-
-
-
 
 void showReg(const char* name, uint32_t reg)
 {
@@ -219,32 +204,71 @@ void h_print(uint32_t reg)
 	t_print("\n");
 }
 
-void d_print(uint8_t reg)
+void d_print(uint16_t reg)
 {
+
+	uint8_t thFlag = 0, hFlag = 0, tFlag = 0;
+
+	uint8_t thousends = reg/1000;
+	reg = reg%1000;
+
 	uint8_t hundreds = reg/100;
 	reg = reg%100;
 
-	uint8_t tens = reg/10 + 0x30;
+	uint8_t tens = reg/10;
 	reg = reg%10;
 
-	uint8_t ones = reg + 0x30;
-	if(ones > 0x39)
+	uint8_t ones = reg;
+
+	if(thousends)
 	{
-		ones = (reg - 10) + 0x41;
-	}
-	if(tens > 0x39)
-	{
-		tens = (reg - 10) + 0x41;
-	}
-	if(hundreds > 0x39)
-	{
-		hundreds = (reg - 10) + 0x41;
+		thFlag = 1;
+		hFlag = 1;
+		tFlag = 1;
 	}
 
 	if(hundreds)
-		t_putc(hundreds);
+	{
+		hFlag = 1;
+		tFlag = 1;
+	}
 
 	if(tens)
+		tFlag = 1;
+
+	thousends += 0x30;
+	if(thousends > 0x39)
+	{
+		thousends = '.';
+	}
+
+
+	hundreds += 0x30;
+	if(hundreds > 0x39)
+	{
+		hundreds = '.';
+	}
+
+
+	tens += 0x30;
+	if(tens > 0x39)
+	{
+		tens = '.';
+	}
+
+	ones += 0x30;
+	if(ones > 0x39)
+	{
+		ones = '.';
+	}
+
+	if(thFlag)
+		t_putc(thousends);
+
+	if(hFlag)
+		t_putc(hundreds);
+
+	if(tFlag)
 		t_putc(tens);
 
 	t_putc(ones);

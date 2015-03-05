@@ -6,12 +6,9 @@
 void initTerminal();
 bool t_hadInput();
 
-bool t_jumpNow();
-void t_setJumpFlag();
-
 void USART1_IRQHandler(void);
 
-void d_print(uint8_t reg);
+void d_print(uint16_t reg);
 void h_print(uint32_t reg);
 
 void t_print(const char* str);

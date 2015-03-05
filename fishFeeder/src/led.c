@@ -21,7 +21,7 @@ void initLED()
 	GPIO_ResetBits(GPIOC, BLUE_PIN);
 }
 
-void led_toggleBlue()
+void led_toggleBlue(char * argv[], int argc)
 {
 	uint8_t stat = GPIO_ReadInputDataBit(GPIOC, BLUE_PIN);
 
@@ -31,7 +31,7 @@ void led_toggleBlue()
 		GPIO_SetBits(GPIOC, BLUE_PIN);
 }
 
-void led_toggleGreen()
+void led_toggleGreen(char * argv[], int argc)
 {
 	uint8_t stat = GPIO_ReadInputDataBit(GPIOC, GREEN_PIN);
 

@@ -7,11 +7,11 @@
 #include "led.h"
 #include "rtc.h"
 
-typedef void (*func_t)();
+typedef void (*func_t)(char * argv[], int argc);
 
-void help();
-void version();
-void reset();
+void help(char * argv[], int argc);
+void version(char * argv[], int argc);
+void reset(char * argv[], int argc);
 
 
 typedef struct
@@ -26,8 +26,7 @@ termCommands cmdTable[] = {
 		{"h", "Shows this help", help},
 		{"ver", "Bootloader Version", version},
 		{"reset", "Reset Processor", reset},
-		{"time", "Display RTC time", rtc_displayTime},
-		{"jump", "Jump to loaded firmware", t_setJumpFlag},
+		{"time", "Set/Display RTC time <HH MM dd mm yyyy>", rtc_setTime},
 		{"blue", "Toggle blue LED", led_toggleBlue},
 		{"green", "Toggle green LED", led_toggleGreen},
 
@@ -38,15 +37,20 @@ bool t_Handler(char* cmd)
 {
 	bool stat = 0;
 
+	char * argv[6];
+	int argc = 6;
+
+
+	t_stripWhite(cmd);
+	t_parseArgs(cmd, argv, &argc);
+
 	uint8_t k = 0;
 	while(cmdTable[k].f)
 	{
-		t_stripWhite(cmd);
-
 		if(!t_strcmp(cmdTable[k].cmd, cmd))
 		{
 			stat = 1;
-			cmdTable[k].f();
+			cmdTable[k].f(argv, argc);
 		}
 
 
@@ -56,7 +60,7 @@ bool t_Handler(char* cmd)
 	return stat;
 }
 
-void version()
+void version(char * argv[], int argc)
 {
 	t_print("Boot loader Version:");
 	h_print(VERSION_NUMBER);
@@ -72,7 +76,8 @@ typedef struct
 {
   __IO uint32_t resetRegister;
 }SPECIAL_RESET_REG;
-void reset()
+
+void reset(char * argv[], int argc)
 {
 	t_print("Processor will RESET\n");
 
@@ -81,7 +86,7 @@ void reset()
 }
 
 
-void help(const char* argv)
+void help(char * argv[], int argc)
 {
 	t_print("Help:\n");
 	uint8_t k = 0;

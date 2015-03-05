@@ -14,14 +14,14 @@ void* memcpy( void * destination, const void * source, size_t num );
 void minuteAction(void)
 {
 	t_print("5 Minutes has passed\n");
-	rtc_displayTime();
+	rtc_setTime(0,0);
 }
 
 void hourAction(void)
 {
 	t_print("==== HOURLY ===\n");
 	t_print("An HOUR has passed\n");
-	rtc_displayTime();
+	rtc_setTime(0,0);
 }
 
 /// Main function.  Called by the startup code.
@@ -31,15 +31,18 @@ int main(void)
 	NVIC_Configuration();
 
 	initTerminal();
-	initLED();
-	initTemp();
-	initRTC();
 
 	t_print("Fish Feeder - Build: ");
 	t_print(__DATE__);
 	t_print(" ");
 	t_print(__TIME__);
 	t_print("\n");
+
+
+	initLED();
+	initTemp();
+	initRTC();
+
 
 
 	rtc_setMinuteAlarm(5, minuteAction);

@@ -4,5 +4,5 @@
 
 
 void initLED();
-void led_toggleBlue();
-void led_toggleGreen();
+void led_toggleBlue(char * argv[], int argc);
+void led_toggleGreen(char * argv[], int argc);
