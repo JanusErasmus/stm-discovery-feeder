@@ -11,17 +11,33 @@ void delay();
 typedef int size_t;
 void* memcpy( void * destination, const void * source, size_t num );
 
-void minuteAction(void)
+void secondAction(uint8_t hour, uint8_t minute)
 {
-	t_print("5 Minutes has passed\n");
-	rtc_setTime(0,0);
+	t_print("Stop feeding the fish\n");
+
+	rtc_setSecondAlarm(0,0);
+
 }
 
-void hourAction(void)
+void hourAction(uint8_t hour, uint8_t minute)
 {
 	t_print("==== HOURLY ===\n");
 	t_print("An HOUR has passed\n");
-	rtc_setTime(0,0);
+	d_print(hour);
+	t_print(":");
+
+	switch(hour)
+	{
+	case 5:
+	case 9:
+	case 13:
+	case 17:
+		t_print("Feed the fish\n");
+		rtc_setSecondAlarm(15, secondAction);
+		break;
+	default:
+		break;
+	}
 }
 
 /// Main function.  Called by the startup code.
@@ -43,9 +59,6 @@ int main(void)
 	initTemp();
 	initRTC();
 
-
-
-	rtc_setMinuteAlarm(5, minuteAction);
 	rtc_setHourAlarm(1, hourAction);
 
 	while(1)

@@ -22,15 +22,20 @@ struct Date_s
   uint16_t Year;
 }s_DateStructVar;
 
+uint8_t mSecValue = 0;
+uint8_t mSecAlarm = 0;
+uint8_t mSecAlarmCount = 0;
+void (*sec_cb_func)(uint8_t hour, uint8_t minute);
+
 uint8_t mMinuteValue = 0;
 uint8_t mMinuteAlarm = 0;
 uint8_t mMinuteAlarmCount = 0;
-void (*minute_cb_func)(void);
+void (*minute_cb_func)(uint8_t hour, uint8_t minute);
 
 uint8_t mHourValue = 0;
 uint8_t mHourAlarm = 0;
 uint8_t mHourAlarmCount = 0;
-void (*hour_cb_func)(void);
+void (*hour_cb_func)(uint8_t hour, uint8_t minute);
 
 void RTC_Configuration(void)
 {
@@ -257,14 +262,21 @@ void updateTime()
 
 }
 
-void rtc_setMinuteAlarm(uint8_t minutes, void(*cb)(void))
+void rtc_setSecondAlarm(uint8_t seconds, void(*cb)(uint8_t hour, uint8_t minute))
+{
+	mSecAlarm = seconds;
+	mSecAlarmCount = seconds;
+	sec_cb_func = cb;
+}
+
+void rtc_setMinuteAlarm(uint8_t minutes, void(*cb)(uint8_t hour, uint8_t minute))
 {
 	mMinuteAlarm = minutes;
 	mMinuteAlarmCount = minutes;
 	minute_cb_func = cb;
 }
 
-void rtc_setHourAlarm(uint8_t hours, void(*cb)(void))
+void rtc_setHourAlarm(uint8_t hours, void(*cb)(uint8_t hour, uint8_t minute))
 {
 	mHourAlarm = hours;
 	mHourAlarmCount = hours;
@@ -276,11 +288,27 @@ void rtc_setHourAlarm(uint8_t hours, void(*cb)(void))
 
 void checkAlarms()
 {
+	if(!mSecValue)
+		mSecValue = mSecond;
+
 	if(!mMinuteValue)
 		mMinuteValue = mMinute;
 
 	if(!mHourValue)
-			mHourValue = mHour;
+		mHourValue = mHour;
+
+	if(mSecValue != mSecond)
+	{
+		mSecValue = mSecond;
+
+		if(mSecAlarm && (--mSecAlarmCount == 0))
+		{
+			mSecAlarmCount = mSecAlarm;
+
+			if(sec_cb_func)
+				sec_cb_func(mHour, mMinute);
+		}
+	}
 
 	if(mMinuteValue != mMinute)
 	{
@@ -291,23 +319,23 @@ void checkAlarms()
 			mMinuteAlarmCount = mMinuteAlarm;
 
 			if(minute_cb_func)
-				minute_cb_func();
+				minute_cb_func(mHour, mMinute);
 		}
 	}
 
 	if(mHourValue != mHour)
+	{
+		mHourValue = mHour;
+
+		if(mHourAlarm && (--mHourAlarmCount == 0))
 		{
-			mHourValue = mHour;
+			mHourAlarmCount = mHourAlarm;
+			t_print("Hour Alarm!!\n");
 
-			if(mHourAlarm && (--mHourAlarmCount == 0))
-			{
-				mHourAlarmCount = mHourAlarm;
-				t_print("Hour Alarm!!\n");
-
-				if(hour_cb_func)
-					hour_cb_func();
-			}
+			if(hour_cb_func)
+				hour_cb_func(mHour, mMinute);
 		}
+	}
 }
 
 void rtc_setTime(char * argv[], int argc)
@@ -348,17 +376,18 @@ void rtc_setTime(char * argv[], int argc)
 	}
 
 	t_print("Time: ");
-	d_print(s_DateStructVar.Day);
-	t_print("-");
-	d_print(s_DateStructVar.Month);
-	t_print("-");
-	d_print(s_DateStructVar.Year);
-	t_print(" ");
+
 	d_print(mHour);
 	t_print(":");
 	d_print(mMinute);
 	t_print(":");
 	d_print(mSecond);
+	t_print(" ");
+	d_print(s_DateStructVar.Day);
+	t_print("-");
+	d_print(s_DateStructVar.Month);
+	t_print("-");
+	d_print(s_DateStructVar.Year);
 	t_print("\n");
 }
 
