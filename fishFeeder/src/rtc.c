@@ -22,20 +22,14 @@ struct Date_s
   uint16_t Year;
 }s_DateStructVar;
 
-uint8_t mSecValue = 0;
-uint8_t mSecAlarm = 0;
-uint8_t mSecAlarmCount = 0;
-void (*sec_cb_func)(uint8_t hour, uint8_t minute);
+struct Alarm_s
+{
+	uint8_t CurrentValue;
+	uint8_t AlarmCount;
+	uint8_t AlarmInterval;
+	void (*cb_func)(uint8_t hour, uint8_t minute);
+}mSecondsAlarm, mMinutesAlarm, mHoursAlarm;
 
-uint8_t mMinuteValue = 0;
-uint8_t mMinuteAlarm = 0;
-uint8_t mMinuteAlarmCount = 0;
-void (*minute_cb_func)(uint8_t hour, uint8_t minute);
-
-uint8_t mHourValue = 0;
-uint8_t mHourAlarm = 0;
-uint8_t mHourAlarmCount = 0;
-void (*hour_cb_func)(uint8_t hour, uint8_t minute);
 
 void RTC_Configuration(void)
 {
@@ -186,6 +180,21 @@ void CheckForDaysElapsed(void)
 void initRTC()
 {
 
+	mSecondsAlarm.AlarmCount = 0;
+	mSecondsAlarm.AlarmInterval = 0;
+	mSecondsAlarm.CurrentValue = 0;
+	mSecondsAlarm.cb_func = 0;
+
+	mMinutesAlarm.AlarmCount = 0;
+	mMinutesAlarm.AlarmInterval = 0;
+	mMinutesAlarm.CurrentValue = 0;
+	mMinutesAlarm.cb_func = 0;
+
+	mHoursAlarm.AlarmCount = 0;
+	mHoursAlarm.AlarmInterval = 0;
+	mHoursAlarm.CurrentValue = 0;
+	mHoursAlarm.cb_func = 0;
+
 	 /* Enable PWR and BKP clocks */
 	  RCC_APB1PeriphClockCmd(RCC_APB1Periph_PWR | RCC_APB1Periph_BKP, ENABLE);
 
@@ -264,78 +273,50 @@ void updateTime()
 
 void rtc_setSecondAlarm(uint8_t seconds, void(*cb)(uint8_t hour, uint8_t minute))
 {
-	mSecAlarm = seconds;
-	mSecAlarmCount = seconds;
-	sec_cb_func = cb;
+	mSecondsAlarm.AlarmInterval = seconds;
+	mSecondsAlarm.AlarmCount = seconds;
+	mSecondsAlarm.cb_func = cb;
 }
 
 void rtc_setMinuteAlarm(uint8_t minutes, void(*cb)(uint8_t hour, uint8_t minute))
 {
-	mMinuteAlarm = minutes;
-	mMinuteAlarmCount = minutes;
-	minute_cb_func = cb;
+	mMinutesAlarm.AlarmInterval = minutes;
+	mMinutesAlarm.AlarmCount = minutes;
+	mMinutesAlarm.cb_func = cb;
 }
 
 void rtc_setHourAlarm(uint8_t hours, void(*cb)(uint8_t hour, uint8_t minute))
 {
-	mHourAlarm = hours;
-	mHourAlarmCount = hours;
-	hour_cb_func = cb;
+	mHoursAlarm.AlarmInterval = hours;
+	mHoursAlarm.AlarmCount = hours;
+	mHoursAlarm.cb_func = cb;
 }
 
+void execAlarm(struct Alarm_s * alm, uint8_t counter)
+{
+	if(!alm->CurrentValue)
+		alm->CurrentValue = counter;
 
+	if(alm->CurrentValue != counter)
+	{
+		alm->CurrentValue = counter;
+
+		if(alm->AlarmInterval && (--(alm->AlarmCount) == 0))
+		{
+			alm->AlarmCount = alm->AlarmInterval;
+
+			if(alm->cb_func)
+				alm->cb_func(mHour, mMinute);
+		}
+	}
+}
 
 
 void checkAlarms()
 {
-	if(!mSecValue)
-		mSecValue = mSecond;
-
-	if(!mMinuteValue)
-		mMinuteValue = mMinute;
-
-	if(!mHourValue)
-		mHourValue = mHour;
-
-	if(mSecValue != mSecond)
-	{
-		mSecValue = mSecond;
-
-		if(mSecAlarm && (--mSecAlarmCount == 0))
-		{
-			mSecAlarmCount = mSecAlarm;
-
-			if(sec_cb_func)
-				sec_cb_func(mHour, mMinute);
-		}
-	}
-
-	if(mMinuteValue != mMinute)
-	{
-		mMinuteValue = mMinute;
-
-		if(mMinuteAlarm && (--mMinuteAlarmCount == 0))
-		{
-			mMinuteAlarmCount = mMinuteAlarm;
-
-			if(minute_cb_func)
-				minute_cb_func(mHour, mMinute);
-		}
-	}
-
-	if(mHourValue != mHour)
-	{
-		mHourValue = mHour;
-
-		if(mHourAlarm && (--mHourAlarmCount == 0))
-		{
-			mHourAlarmCount = mHourAlarm;
-			t_print("Hour Alarm!!\n");
-
-			if(hour_cb_func)
-				hour_cb_func(mHour, mMinute);
-		}
-	}
+	execAlarm(&mSecondsAlarm, mSecond);
+	execAlarm(&mMinutesAlarm, mMinute);
+	execAlarm(&mHoursAlarm, mHour);
 }
 
 void rtc_setTime(char * argv[], int argc)

@@ -61,6 +61,8 @@ int main(void)
 
 	rtc_setHourAlarm(1, hourAction);
 
+	t_print(">>");
+
 	while(1)
 	{
 		delay();

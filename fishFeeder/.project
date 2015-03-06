@@ -3,7 +3,6 @@
 	<name>hello</name>
 	<comment></comment>
 	<projects>
-		<project>stm32f10x</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>
