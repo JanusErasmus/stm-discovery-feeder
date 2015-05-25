@@ -1,0 +1,1 @@
+A Timed pulse output to drive a feeder during set time intervals
